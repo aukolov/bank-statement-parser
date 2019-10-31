@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BocStatementParser": {
+      "commandName": "Project",
+      "commandLineArgs": "-p \"C:\\Users\\a.ukolov\\Downloads\\Bank Statement\""
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 namespace BocStatementParser
 {
-    public class Line
+    public class Transaction
     {
         public string Description { get; set; }
         public DateTime? Date { get; set; }

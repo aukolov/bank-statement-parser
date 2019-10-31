@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Shouldly;
 
@@ -6,12 +7,14 @@ namespace BocStatementParser.Tests
 {
     public class Tests
     {
-        private FileProcessor _instance;
+        private FileProcessor _fileProcessor;
+        private TransactionSerializer _transactionSerializer;
 
         [SetUp]
         public void Setup()
         {
-            _instance = new FileProcessor();
+            _fileProcessor = new FileProcessor();
+            _transactionSerializer = new TransactionSerializer();
         }
 
         private static string[] GetPdfFiles() => 
@@ -25,8 +28,11 @@ namespace BocStatementParser.Tests
                 Path.GetFileNameWithoutExtension(pdfPath) + ".csv");
             var expectedResult = File.ReadAllText(csvFile);
 
-            var actualResult = _instance.Process(pdfPath);
+            var statement = _fileProcessor.Process(pdfPath)
+                .ShouldHaveSingleItem();
 
+            var actualResult = _transactionSerializer
+                .Serialize(statement.Transactions.ToArray());
             actualResult.ShouldBe(expectedResult);
         }
 
@@ -36,7 +42,10 @@ namespace BocStatementParser.Tests
             var csvFile = "test-data/all.csv";
             var expectedResult = File.ReadAllText(csvFile);
 
-            var actualResult = _instance.Process("test-data");
+            var statements = _fileProcessor.Process("test-data");
+            statements.Length.ShouldBe(3);
+            var actualResult = _transactionSerializer.Serialize(
+                statements.SelectMany(x => x.Transactions).ToArray());
 
             actualResult.ShouldBe(expectedResult);
         }
