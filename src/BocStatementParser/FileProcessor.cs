@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using BocStatementParser.Extensions;
 using Pdf2Text;
@@ -13,10 +12,11 @@ namespace BocStatementParser
     public class FileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
+        private readonly Regex _accountNumberRegex = new Regex(@"^\d{10,}$");
         private readonly Regex _dateRegex = new Regex(@"^\d{2}/\d{2}/\d{4}$");
         private readonly Regex _amountRegex = new Regex(@"^(\d{1,3})(,\d{3})*\.\d{2}$");
 
-        public string Process(string path)
+        public Statement[] Process(string path)
         {
             var files = new List<string>();
             if (Directory.Exists(path))
@@ -31,19 +31,22 @@ namespace BocStatementParser
                 files.Add(path);
             }
 
-            var lines = files.SelectMany(ProcessFile).ToArray();
-
-            var buildResult = BuildResult(lines);
-            return buildResult;
+            var statements = files.Select(ProcessFile).ToArray();
+            return statements;
         }
 
-        private List<Line> ProcessFile(string pdfPath)
+        private Statement ProcessFile(string pdfPath)
         {
             var pdfModel = _pdfParser.Parse(pdfPath);
 
-            var state = State.ScrollToTable;
-            Line currentLine = null;
-            var lines = new List<Line>();
+            var state = State.SearchAccountNumber;
+            Transaction currentTrxn = null;
+
+            var statement = new Statement
+            {
+                Transactions = new List<Transaction>()
+            };
+
             foreach (var page in pdfModel.Pages)
             {
                 var nextPage = false;
@@ -55,26 +58,37 @@ namespace BocStatementParser
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
+                        case State.SearchAccountNumber:
+                            if (s.Text == "Account Number"
+                                && s.Left.IsApproximately(380))
+                            {
+                                if (!_accountNumberRegex.IsMatch(next.Text))
+                                    throw new Exception($"Account number was expected to be numeric but was {next.Text}.");
+                                statement.AccountNumber = next.Text;
+                                state = State.ScrollToTable;
+                            }
+
+                            break;
                         case State.ScrollToTable:
                             if (s.Text == "Balance"
                                 && s.Left.IsApproximately(538))
                             {
-                                state = State.SearchBeginning;
+                                state = State.SearchTrxn;
                             }
 
                             break;
-                        case State.SearchBeginning:
+                        case State.SearchTrxn:
                             var potentialTrxnDate = _dateRegex.Match(s.Text);
                             if (potentialTrxnDate.Success
                                 && _dateRegex.IsMatch(next.Text)
                                 && s.Left.IsApproximately(42))
                             {
-                                if (currentLine != null)
+                                if (currentTrxn != null)
                                 {
-                                    lines.Add(currentLine);
+                                    statement.Transactions.Add(currentTrxn);
                                 }
 
-                                currentLine = new Line
+                                currentTrxn = new Transaction
                                 {
                                     Date = DateTime.ParseExact(s.Text, "dd/MM/yyyy",
                                         CultureInfo.InvariantCulture)
@@ -88,9 +102,9 @@ namespace BocStatementParser
                                 state = State.ScrollToTable;
                             }
                             else if (s.Left.IsApproximately(141)
-                                     && currentLine != null)
+                                     && currentTrxn != null)
                             {
-                                currentLine.Description += " " + s.Text;
+                                currentTrxn.Description += " " + s.Text;
                             }
 
                             break;
@@ -100,35 +114,35 @@ namespace BocStatementParser
                             state = State.FirstDescription;
                             break;
                         case State.FirstDescription:
-                            if (currentLine == null)
-                                throw new Exception("Current line must not be null.");
-                            if (currentLine.Description != null)
+                            if (currentTrxn == null)
+                                throw new Exception("Current transaction must not be null.");
+                            if (currentTrxn.Description != null)
                                 throw new Exception("Description was expected to be null but was not.");
 
-                            currentLine.Description = s.Text;
+                            currentTrxn.Description = s.Text;
                             state = State.Amount;
                             break;
                         case State.Amount:
                             var match = _amountRegex.Match(s.Text);
                             if (!match.Success)
                                 throw new Exception($"Amount was expected but got {s.Text}.");
-                            if (currentLine == null)
-                                throw new Exception("Current line must not be null.");
-                            if (currentLine.Amount.HasValue)
+                            if (currentTrxn == null)
+                                throw new Exception("Current transaction must not be null.");
+                            if (currentTrxn.Amount.HasValue)
                                 throw new Exception("Amount was expected to be null but was not.");
 
                             var amount = decimal.Parse(s.Text, CultureInfo.InvariantCulture);
                             if (s.Right.IsApproximately(411))
-                                currentLine.Amount = -amount;
+                                currentTrxn.Amount = -amount;
                             else if (s.Right.IsApproximately(484))
-                                currentLine.Amount = +amount;
+                                currentTrxn.Amount = +amount;
                             else
                                 throw new Exception($"Found amount at unexpected location: {s.Right}.");
                             state = State.Balance;
 
                             break;
                         case State.Balance:
-                            state = State.SearchBeginning;
+                            state = State.SearchTrxn;
                             break;
 
                         default:
@@ -137,37 +151,20 @@ namespace BocStatementParser
                 }
             }
 
-            if (currentLine != null)
+            if (currentTrxn != null)
             {
-                lines.Add(currentLine);
+                statement.Transactions.Add(currentTrxn);
             }
 
-            return lines;
-        }
-
-        private static string BuildResult(Line[] lines)
-        {
-            var result = new StringBuilder("Date,Description,Amount")
-                .AppendLine();
-            foreach (var line in lines)
-            {
-                result.Append(line.Date?.ToString("dd/MM/yyyy")).Append(",");
-                if (line.Description.Contains(","))
-                    result.Append("\"").Append(line.Description?.Replace("\"", "\"\"")).Append("\",");
-                else
-                    result.Append(line.Description).Append(",");
-                result.Append(line.Amount?.ToString("G29", CultureInfo.InvariantCulture))
-                    .AppendLine();
-            }
-
-            return result.ToString();
+            return statement;
         }
     }
 
     enum State
     {
+        SearchAccountNumber,
         ScrollToTable,
-        SearchBeginning,
+        SearchTrxn,
         ValueDate,
         FirstDescription,
         Amount,
