@@ -41,7 +41,7 @@ namespace BocStatementParser
 
             var state = State.SearchAccountNumber;
             Transaction currentTrxn = null;
-
+            var currentBalance = 0m;
             var statement = new Statement
             {
                 Transactions = new List<Transaction>()
@@ -73,6 +73,16 @@ namespace BocStatementParser
                             if (s.Text == "Balance"
                                 && s.Left.IsApproximately(538))
                             {
+                                state = page.PageNumber == 0 ? State.SearchBalance : State.SearchTrxn;
+                            }
+
+                            break;
+                        case State.SearchBalance:
+                            if (s.Text == "forward")
+                            {
+                                if (!decimal.TryParse(next.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out currentBalance))
+                                    throw new Exception($"Account number was expected to be numeric but was {next.Text}.");
+
                                 state = State.SearchTrxn;
                             }
 
@@ -142,6 +152,14 @@ namespace BocStatementParser
 
                             break;
                         case State.Balance:
+                            var oldBalance = currentBalance;
+                            if (!decimal.TryParse(s.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out currentBalance))
+                                throw new Exception($"Account number was expected to be numeric but was {s.Text}.");
+                            if (currentTrxn == null)
+                                throw new Exception("Current transaction was not expected to be null but was.");
+                            if (oldBalance + currentTrxn.Amount != currentBalance)
+                                throw new Exception($"Balance was expected to be {oldBalance + currentTrxn.Amount} but was {currentBalance}.");
+                            
                             state = State.SearchTrxn;
                             break;
 
@@ -163,6 +181,7 @@ namespace BocStatementParser
     enum State
     {
         SearchAccountNumber,
+        SearchBalance,
         ScrollToTable,
         SearchTrxn,
         ValueDate,
