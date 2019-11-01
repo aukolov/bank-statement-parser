@@ -65,6 +65,19 @@ namespace BocStatementParser
                                 if (!_accountNumberRegex.IsMatch(next.Text))
                                     throw new Exception($"Account number was expected to be numeric but was {next.Text}.");
                                 statement.AccountNumber = next.Text;
+                                state = State.SearchStatementPeriod;
+                            }
+
+                            break;
+                        case State.SearchStatementPeriod:
+                            if (s.Text.StartsWith("Statement Period:"))
+                            {
+                                var periodMatch = Regex.Match(s.Text, 
+                                    @"Statement Period\: (?<from>\d{2}/\d{2}/\d{4}) - (?<to>\d{2}/\d{2}/\d{4})");
+                                var fromText = periodMatch.Groups["from"].Captures[0].Value;
+                                var toText = periodMatch.Groups["to"].Captures[0].Value;
+                                statement.FromDate = DateTime.ParseExact(fromText, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                                statement.ToDate = DateTime.ParseExact(toText, "dd/MM/yyyy", CultureInfo.InvariantCulture);
                                 state = State.ScrollToTable;
                             }
 
@@ -181,8 +194,9 @@ namespace BocStatementParser
     enum State
     {
         SearchAccountNumber,
-        SearchBalance,
+        SearchStatementPeriod,
         ScrollToTable,
+        SearchBalance,
         SearchTrxn,
         ValueDate,
         FirstDescription,

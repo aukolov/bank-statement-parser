@@ -21,22 +21,22 @@
     <None Update="test-data\all.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="test-data\eStatements-69523790-357029088859-2018-11-30-1569334962692.csv">
+    <None Update="test-data\1.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="test-data\eStatements-69523790-357029088859-2018-11-30-1569334962692.pdf">
+    <None Update="test-data\1.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="test-data\eStatements-69523790-357029088859-2018-12-31-1569334962568.csv">
+    <None Update="test-data\2.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="test-data\eStatements-69523790-357029088859-2018-12-31-1569334962568.pdf">
+    <None Update="test-data\2.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="test-data\eStatements-69523790-357029088859-2019-08-31-1569327252037.csv">
+    <None Update="test-data\3.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="test-data\eStatements-69523790-357029088859-2019-08-31-1569327252037.pdf">
+    <None Update="test-data\3.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

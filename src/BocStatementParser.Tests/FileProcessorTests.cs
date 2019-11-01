@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -17,7 +18,7 @@ namespace BocStatementParser.Tests
             _transactionSerializer = new TransactionSerializer();
         }
 
-        private static string[] GetPdfFiles() => 
+        private static string[] GetPdfFiles() =>
             Directory.GetFiles("./test-data", "*.pdf");
 
         [TestCaseSource(nameof(GetPdfFiles))]
@@ -48,6 +49,26 @@ namespace BocStatementParser.Tests
                 statements.SelectMany(x => x.Transactions).ToArray());
 
             actualResult.ShouldBe(expectedResult);
+        }
+
+        [Test]
+        public void ExtractsFromAndToTimestamp()
+        {
+            var statement = _fileProcessor.Process("test-data/1.pdf")
+                .ShouldHaveSingleItem();
+
+            statement.FromDate.ShouldBe(new DateTime(2018, 11, 1));
+            statement.ToDate.ShouldBe(new DateTime(2018, 11, 30));
+        }
+
+        [Test]
+        public void ExtractsAccountNumber()
+        {
+            var statement = _fileProcessor.Process("test-data/1.pdf")
+                .ShouldHaveSingleItem();
+
+            statement.AccountNumber.ShouldStartWith("35");
+            statement.AccountNumber.Length.ShouldBe(12);
         }
     }
 }
