@@ -1,25 +1,27 @@
 using System;
 using System.IO;
 using System.Linq;
+using BankStatementParser;
+using BankStatementParser.Banks;
 using NUnit.Framework;
 using Shouldly;
 
 namespace BankStatementParser.Tests
 {
-    public class Tests
+    public class RevolutFileProcessorTests
     {
-        private BocFileProcessor _bocFileProcessor;
+        private RevolutFileProcessor _fileProcessor;
         private TransactionSerializer _transactionSerializer;
 
         [SetUp]
         public void Setup()
         {
-            _bocFileProcessor = new BocFileProcessor();
+            _fileProcessor = new RevolutFileProcessor();
             _transactionSerializer = new TransactionSerializer();
         }
 
         private static string[] GetPdfFiles() =>
-            Directory.GetFiles("./test-data", "*.pdf");
+            Directory.GetFiles("./test-data/revolut", "*.pdf");
 
         [TestCaseSource(nameof(GetPdfFiles))]
         public void ProcessesFiles(string pdfPath)
@@ -29,7 +31,7 @@ namespace BankStatementParser.Tests
                 Path.GetFileNameWithoutExtension(pdfPath) + ".csv");
             var expectedResult = File.ReadAllText(csvFile);
 
-            var statement = _bocFileProcessor.Process(pdfPath)
+            var statement = _fileProcessor.Process(pdfPath)
                 .ShouldHaveSingleItem();
 
             var actualResult = _transactionSerializer
@@ -40,10 +42,10 @@ namespace BankStatementParser.Tests
         [Test]
         public void ProcessesFolder()
         {
-            var csvFile = "test-data/all.csv";
+            var csvFile = "test-data/revolut/all.csv";
             var expectedResult = File.ReadAllText(csvFile);
 
-            var statements = _bocFileProcessor.Process("test-data");
+            var statements = _fileProcessor.Process("test-data/revolut");
             statements.Length.ShouldBe(3);
             var actualResult = _transactionSerializer.Serialize(
                 statements.SelectMany(x => x.Transactions).ToArray());
@@ -54,21 +56,21 @@ namespace BankStatementParser.Tests
         [Test]
         public void ExtractsFromAndToTimestamp()
         {
-            var statement = _bocFileProcessor.Process("test-data/1.pdf")
+            var statement = _fileProcessor.Process("test-data/revolut/1.pdf")
                 .ShouldHaveSingleItem();
 
-            statement.FromDate.ShouldBe(new DateTime(2018, 11, 1));
-            statement.ToDate.ShouldBe(new DateTime(2018, 11, 30));
+            statement.FromDate.ShouldBe(new DateTime(2020, 2, 29));
+            statement.ToDate.ShouldBe(new DateTime(2018, 3, 31));
         }
 
         [Test]
         public void ExtractsAccountNumber()
         {
-            var statement = _bocFileProcessor.Process("test-data/1.pdf")
+            var statement = _fileProcessor.Process("test-data/revolut/1.pdf")
                 .ShouldHaveSingleItem();
 
-            statement.AccountNumber.ShouldStartWith("35");
-            statement.AccountNumber.Length.ShouldBe(12);
+            statement.AccountNumber.ShouldStartWith("GB");
+            statement.AccountNumber.Length.ShouldBe(22);
         }
     }
 }

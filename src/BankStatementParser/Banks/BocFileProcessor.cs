@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using BankStatementParser.Extensions;
 using Pdf2Text;
 
-namespace BankStatementParser
+namespace BankStatementParser.Banks
 {
     public class BocFileProcessor
     {
@@ -189,18 +189,18 @@ namespace BankStatementParser
 
             return statement;
         }
-    }
-
-    enum State
-    {
-        SearchAccountNumber,
-        SearchStatementPeriod,
-        ScrollToTable,
-        SearchBalance,
-        SearchTrxn,
-        ValueDate,
-        FirstDescription,
-        Amount,
-        Balance,
+        
+        enum State
+        {
+            SearchAccountNumber,
+            SearchStatementPeriod,
+            ScrollToTable,
+            SearchBalance,
+            SearchTrxn,
+            ValueDate,
+            FirstDescription,
+            Amount,
+            Balance,
+        }
     }
 }
