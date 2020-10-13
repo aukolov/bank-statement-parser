@@ -4,12 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using BocStatementParser.Extensions;
+using BankStatementParser.Extensions;
 using Pdf2Text;
 
-namespace BocStatementParser
+namespace BankStatementParser
 {
-    public class FileProcessor
+    public class BocFileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
         private readonly Regex _accountNumberRegex = new Regex(@"^\d{10,}$");

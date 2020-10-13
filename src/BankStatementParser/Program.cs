@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using CommandLine;
 
-namespace BocStatementParser
+namespace BankStatementParser
 {
     static class Program
     {
@@ -15,7 +15,7 @@ namespace BocStatementParser
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(o =>
                 {
-                    var fileProcessor = new FileProcessor();
+                    var fileProcessor = new BocFileProcessor();
                     var statements = fileProcessor.Process(o.Path);
 
                     var transactionSerializer = new TransactionSerializer();

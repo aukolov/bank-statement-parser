@@ -1,7 +1,7 @@
 ﻿using CommandLine;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace BocStatementParser
+namespace BankStatementParser
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     public class Options

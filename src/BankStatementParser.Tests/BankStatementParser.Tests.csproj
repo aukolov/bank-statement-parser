@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BocStatementParser\BocStatementParser.csproj" />
+    <ProjectReference Include="..\BankStatementParser\BankStatementParser.csproj" />
   </ItemGroup>
 
   <ItemGroup>

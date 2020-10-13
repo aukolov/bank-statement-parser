@@ -4,17 +4,17 @@ using System.Linq;
 using NUnit.Framework;
 using Shouldly;
 
-namespace BocStatementParser.Tests
+namespace BankStatementParser.Tests
 {
     public class Tests
     {
-        private FileProcessor _fileProcessor;
+        private BocFileProcessor _bocFileProcessor;
         private TransactionSerializer _transactionSerializer;
 
         [SetUp]
         public void Setup()
         {
-            _fileProcessor = new FileProcessor();
+            _bocFileProcessor = new BocFileProcessor();
             _transactionSerializer = new TransactionSerializer();
         }
 
@@ -29,7 +29,7 @@ namespace BocStatementParser.Tests
                 Path.GetFileNameWithoutExtension(pdfPath) + ".csv");
             var expectedResult = File.ReadAllText(csvFile);
 
-            var statement = _fileProcessor.Process(pdfPath)
+            var statement = _bocFileProcessor.Process(pdfPath)
                 .ShouldHaveSingleItem();
 
             var actualResult = _transactionSerializer
@@ -43,7 +43,7 @@ namespace BocStatementParser.Tests
             var csvFile = "test-data/all.csv";
             var expectedResult = File.ReadAllText(csvFile);
 
-            var statements = _fileProcessor.Process("test-data");
+            var statements = _bocFileProcessor.Process("test-data");
             statements.Length.ShouldBe(3);
             var actualResult = _transactionSerializer.Serialize(
                 statements.SelectMany(x => x.Transactions).ToArray());
@@ -54,7 +54,7 @@ namespace BocStatementParser.Tests
         [Test]
         public void ExtractsFromAndToTimestamp()
         {
-            var statement = _fileProcessor.Process("test-data/1.pdf")
+            var statement = _bocFileProcessor.Process("test-data/1.pdf")
                 .ShouldHaveSingleItem();
 
             statement.FromDate.ShouldBe(new DateTime(2018, 11, 1));
@@ -64,7 +64,7 @@ namespace BocStatementParser.Tests
         [Test]
         public void ExtractsAccountNumber()
         {
-            var statement = _fileProcessor.Process("test-data/1.pdf")
+            var statement = _bocFileProcessor.Process("test-data/1.pdf")
                 .ShouldHaveSingleItem();
 
             statement.AccountNumber.ShouldStartWith("35");

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BocStatementParser
+namespace BankStatementParser
 {
     public class Transaction
     {

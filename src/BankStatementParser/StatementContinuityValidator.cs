@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BocStatementParser
+namespace BankStatementParser
 {
     internal static class StatementContinuityValidator
     {

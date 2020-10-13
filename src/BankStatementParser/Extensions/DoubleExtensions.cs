@@ -1,4 +1,4 @@
-﻿namespace BocStatementParser.Extensions
+﻿namespace BankStatementParser.Extensions
 {
     public static class DoubleExtensions
     {
