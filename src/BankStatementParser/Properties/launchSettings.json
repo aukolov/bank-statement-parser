@@ -2,7 +2,7 @@
   "profiles": {
     "BocStatementParser": {
       "commandName": "Project",
-      "commandLineArgs": "-p \"C:\\Users\\a.ukolov\\Downloads\\Bank Statement\""
+      "commandLineArgs": "-b Hellenic -p \"C:\\Projects\\my\\bank-statement-parser\\src\\BankStatementParser.Tests\\test-data\\hellenic\""
     }
   }
 }

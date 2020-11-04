@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -9,10 +9,10 @@ using Pdf2Text;
 
 namespace BankStatementParser.Banks
 {
-    public class BocFileProcessor : IFileProcessor
+    public class HellenicFileProcessor : IFileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
-        private readonly Regex _accountNumberRegex = new Regex(@"^\d{10,}$");
+        private readonly Regex _accountNumberRegex = new Regex(@"^\d+-\d+-\d+-\d+$");
         private readonly Regex _dateRegex = new Regex(@"^\d{2}/\d{2}/\d{4}$");
         private readonly Regex _amountRegex = new Regex(@"^(\d{1,3})(,\d{3})*\.\d{2}$");
 
@@ -59,25 +59,28 @@ namespace BankStatementParser.Banks
                     switch (state)
                     {
                         case State.SearchAccountNumber:
-                            if (s.Text == "Account Number"
-                                && s.Left.IsApproximately(380))
+                            if (s.Text == "ACCOUNT NO"
+                                && s.Left.IsApproximately(272))
                             {
                                 if (!_accountNumberRegex.IsMatch(next.Text))
-                                    throw new Exception($"Account number was expected to be numeric but was {next.Text}.");
+                                    throw new Exception(
+                                        $"Account number was expected to be numeric but was {next.Text}.");
                                 statement.AccountNumber = next.Text;
                                 state = State.SearchStatementPeriod;
                             }
 
                             break;
                         case State.SearchStatementPeriod:
-                            if (s.Text.StartsWith("Statement Period:"))
+                            if (s.Text == "STATEMENT PERIOD")
                             {
-                                var periodMatch = Regex.Match(s.Text, 
-                                    @"Statement Period\: (?<from>\d{2}/\d{2}/\d{4}) - (?<to>\d{2}/\d{2}/\d{4})");
+                                var periodMatch = Regex.Match(next.Text,
+                                    @"(?<from>\d{2}/\d{2}/\d{4}) - (?<to>\d{2}/\d{2}/\d{4})");
                                 var fromText = periodMatch.Groups["from"].Captures[0].Value;
                                 var toText = periodMatch.Groups["to"].Captures[0].Value;
-                                statement.FromDate = DateTime.ParseExact(fromText, "dd/MM/yyyy", CultureInfo.InvariantCulture);
-                                statement.ToDate = DateTime.ParseExact(toText, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                                statement.FromDate = DateTime.ParseExact(fromText, "dd/MM/yyyy",
+                                    CultureInfo.InvariantCulture);
+                                statement.ToDate =
+                                    DateTime.ParseExact(toText, "dd/MM/yyyy", CultureInfo.InvariantCulture);
                                 state = State.ScrollToTable;
                             }
 
@@ -91,10 +94,13 @@ namespace BankStatementParser.Banks
 
                             break;
                         case State.SearchBalance:
-                            if (s.Text == "forward")
+                            if (s.Text == "BALANCE B/F")
                             {
-                                if (!decimal.TryParse(next.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out currentBalance))
-                                    throw new Exception($"Account number was expected to be numeric but was {next.Text}.");
+                                CultureInfo.InvariantCulture.NumberFormat.CurrencyDecimalSeparator = ",";
+                                if (!decimal.TryParse(next.Text, NumberStyles.Number, CultureInfo.InvariantCulture,
+                                    out currentBalance))
+                                    throw new Exception(
+                                        $"Account number was expected to be numeric but was {next.Text}.");
 
                                 state = State.SearchTrxn;
                             }
@@ -166,13 +172,15 @@ namespace BankStatementParser.Banks
                             break;
                         case State.Balance:
                             var oldBalance = currentBalance;
-                            if (!decimal.TryParse(s.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out currentBalance))
+                            if (!decimal.TryParse(s.Text, NumberStyles.Number, CultureInfo.InvariantCulture,
+                                out currentBalance))
                                 throw new Exception($"Account number was expected to be numeric but was {s.Text}.");
                             if (currentTrxn == null)
                                 throw new Exception("Current transaction was not expected to be null but was.");
                             if (oldBalance + currentTrxn.Amount != currentBalance)
-                                throw new Exception($"Balance was expected to be {oldBalance + currentTrxn.Amount} but was {currentBalance}.");
-                            
+                                throw new Exception(
+                                    $"Balance was expected to be {oldBalance + currentTrxn.Amount} but was {currentBalance}.");
+
                             state = State.SearchTrxn;
                             break;
 
@@ -189,7 +197,7 @@ namespace BankStatementParser.Banks
 
             return statement;
         }
-        
+
         enum State
         {
             SearchAccountNumber,

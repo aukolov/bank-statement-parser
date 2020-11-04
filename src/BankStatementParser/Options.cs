@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using BankStatementParser.Banks;
+using CommandLine;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace BankStatementParser
@@ -8,5 +9,8 @@ namespace BankStatementParser
     {
         [Option('p', "path", Required = true, HelpText = "Path to a PDF BoC statement file or folder containing statement files.")]
         public string Path { get; set; }
+        
+        [Option('b', "bank", Required = true, HelpText = "One of the supported banks: boc (Bank of Cyprus), revolut, hellenic")]
+        public Bank Bank { get; set; }
     }
 }

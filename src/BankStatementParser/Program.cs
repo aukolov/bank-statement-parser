@@ -10,13 +10,13 @@ namespace BankStatementParser
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Bank of Cyprus Statement Parser");
+            Console.WriteLine("Bank Statement Parser");
             Console.WriteLine();
 
             Parser.Default.ParseArguments<Options>(args)
                 .WithParsed(o =>
                 {
-                    var fileProcessor = new BocFileProcessor();
+                    var fileProcessor = CreateFileProcessor(o.Bank);
                     var statements = fileProcessor.Process(o.Path);
 
                     var transactionSerializer = new TransactionSerializer();
@@ -45,6 +45,21 @@ namespace BankStatementParser
                     Console.WriteLine();
                     PrintInColor("Done!", ConsoleColor.Green);
                 });
+        }
+
+        private static IFileProcessor CreateFileProcessor(Bank bank)
+        {
+            switch (bank)
+            {
+                case Bank.BoC:
+                    return new BocFileProcessor();
+                case Bank.Revolut:
+                    return new RevolutFileProcessor();
+                case Bank.Hellenic:
+                    return new HellenicFileProcessor();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(bank), bank, null);
+            }
         }
 
         private static void PrintInColor(string text, ConsoleColor foregroundColor)

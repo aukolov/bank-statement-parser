@@ -9,7 +9,7 @@ using Pdf2Text;
 
 namespace BankStatementParser.Banks
 {
-    public class RevolutFileProcessor
+    public class RevolutFileProcessor : IFileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
         private readonly Regex _accountNumberRegex = new Regex(@"^\d{10,}$");
