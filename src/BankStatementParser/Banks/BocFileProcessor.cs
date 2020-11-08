@@ -94,7 +94,7 @@ namespace BankStatementParser.Banks
                             if (s.Text == "forward")
                             {
                                 if (!decimal.TryParse(next.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out currentBalance))
-                                    throw new Exception($"Account number was expected to be numeric but was {next.Text}.");
+                                    throw new Exception($"Account balance was expected to be numeric but was {next.Text}.");
 
                                 state = State.SearchTrxn;
                             }
@@ -167,7 +167,7 @@ namespace BankStatementParser.Banks
                         case State.Balance:
                             var oldBalance = currentBalance;
                             if (!decimal.TryParse(s.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out currentBalance))
-                                throw new Exception($"Account number was expected to be numeric but was {s.Text}.");
+                                throw new Exception($"Balance was expected to be numeric but was {s.Text}.");
                             if (currentTrxn == null)
                                 throw new Exception("Current transaction was not expected to be null but was.");
                             if (oldBalance + currentTrxn.Amount != currentBalance)
