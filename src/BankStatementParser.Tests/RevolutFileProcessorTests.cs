@@ -59,8 +59,8 @@ namespace BankStatementParser.Tests
             var statement = _fileProcessor.Process("test-data/revolut/1.pdf")
                 .ShouldHaveSingleItem();
 
-            statement.FromDate.ShouldBe(new DateTime(2020, 2, 29));
-            statement.ToDate.ShouldBe(new DateTime(2018, 3, 31));
+            statement.FromDate.ShouldBe(new DateTime(2021, 9, 1));
+            statement.ToDate.ShouldBe(new DateTime(2021, 11, 30));
         }
 
         [Test]
@@ -69,8 +69,8 @@ namespace BankStatementParser.Tests
             var statement = _fileProcessor.Process("test-data/revolut/1.pdf")
                 .ShouldHaveSingleItem();
 
-            statement.AccountNumber.ShouldStartWith("GB");
-            statement.AccountNumber.Length.ShouldBe(22);
+            statement.AccountNumber.ShouldStartWith("LT");
+            statement.AccountNumber.Length.ShouldBe(20);
         }
     }
 }

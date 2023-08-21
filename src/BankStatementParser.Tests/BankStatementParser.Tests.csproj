@@ -23,11 +23,8 @@
     <Content Include="test-data\**\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Update="test-data\boc\1\1.csv">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-
   </ItemGroup>
+
 
 
 

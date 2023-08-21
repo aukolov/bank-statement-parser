@@ -12,10 +12,11 @@ namespace BankStatementParser.Banks
     public class RevolutFileProcessor : IFileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
-        private readonly Regex _accountNumberRegex = new Regex(@"^\d{10,}$");
-        private readonly Regex _dateRegex = new Regex(@"^\d{2}/\d{2}/\d{4}$");
-        private readonly Regex _amountRegex = new Regex(@"^(\d{1,3})(,\d{3})*\.\d{2}$");
-
+        private readonly Regex _accountNumberRegex = new Regex(@"^\w{2}\d{10,}$");
+        private readonly Regex _dateRegex = new Regex(@"^\w{3} \d{1,2}, \d{4}$");
+        private readonly Regex _trxnTypeRegex = new Regex(@"^\w{3}$");
+        private readonly Regex _amountRegex = new Regex(@"^[$€₺£]?[A-Z]{0,3}(?<amount>(\d{1,3})(,\d{3})*\.\d{2}$)");
+            
         public Statement[] Process(string path)
         {
             var files = new List<string>();
@@ -39,9 +40,9 @@ namespace BankStatementParser.Banks
         {
             var pdfModel = _pdfParser.Parse(pdfPath);
 
-            var state = State.SearchStatementPeriod;
+            var state = State.SearchAccountNumber;
             Transaction currentTrxn = null;
-            var currentBalance = 0m;
+            decimal? currentBalance = null;
             var statement = new Statement
             {
                 Transactions = new List<Transaction>()
@@ -58,36 +59,51 @@ namespace BankStatementParser.Banks
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
+                        case State.SearchAccountNumber:
+                            if (s.Text == "IBAN (SEPA)"
+                                && s.Left.IsApproximately(406))
+                            {
+                                if (!_accountNumberRegex.IsMatch(next.Text))
+                                    throw new Exception(
+                                        $"Account number was expected to be numeric but was {next.Text}.");
+                                if (statement.AccountNumber != null && statement.AccountNumber != next.Text)
+                                {
+                                    throw new Exception(
+                                        $"More than one account in one statement file: '{statement.AccountNumber}' and '{next.Text}'");
+                                }
+
+                                statement.AccountNumber = next.Text;
+                                state = State.SearchStatementPeriod;
+                            }
+
+                            break;
                         case State.SearchStatementPeriod:
-                            if (s.Text.StartsWith("Statement Period:"))
+                            if (s.Text.StartsWith("Transactions from "))
                             {
                                 var periodMatch = Regex.Match(s.Text,
                                     @"from (?<from>\w{3} \d{1,2}, \d{4}) to (?<to>\w{3} \d{1,2}, \d{4})");
                                 var fromText = periodMatch.Groups["from"].Captures[0].Value;
                                 var toText = periodMatch.Groups["to"].Captures[0].Value;
-                                statement.FromDate = DateTime.ParseExact(fromText, "MMM d, yyyy",
+                                var from = DateTime.ParseExact(fromText, "MMM d, yyyy",
                                     CultureInfo.InvariantCulture);
-                                statement.ToDate =
-                                    DateTime.ParseExact(toText, "MMM d, yyyy", CultureInfo.InvariantCulture);
-                                state = State.SearchAccountNumber;
-                            }
-
-                            break;
-                        case State.SearchAccountNumber:
-                            if (s.Text == "IBAN (SEPA):"
-                                && s.Left.IsApproximately(380))
-                            {
-                                if (!_accountNumberRegex.IsMatch(next.Text))
-                                    throw new Exception(
-                                        $"Account number was expected to be numeric but was {next.Text}.");
-                                statement.AccountNumber = next.Text;
+                                statement.FromDate = statement.FromDate == DateTime.MinValue
+                                    ? from
+                                    : from < statement.FromDate
+                                        ? from
+                                        : statement.FromDate;
+                                var to = DateTime.ParseExact(toText, "MMM d, yyyy", CultureInfo.InvariantCulture);
+                                statement.ToDate = statement.ToDate == DateTime.MinValue
+                                    ? to
+                                    : to > statement.ToDate
+                                        ? to
+                                        : statement.ToDate;
                                 state = State.ScrollToTable;
                             }
 
                             break;
                         case State.ScrollToTable:
                             if (s.Text == "Balance"
-                                && s.Left.IsApproximately(538))
+                                && s.Left.IsApproximately(531))
                             {
                                 state = State.SearchTrxn;
                             }
@@ -96,8 +112,7 @@ namespace BankStatementParser.Banks
                         case State.SearchTrxn:
                             var potentialTrxnDate = _dateRegex.Match(s.Text);
                             if (potentialTrxnDate.Success
-                                && _dateRegex.IsMatch(next.Text)
-                                && s.Left.IsApproximately(42))
+                                && s.Left.IsApproximately(37.5))
                             {
                                 if (currentTrxn != null)
                                 {
@@ -106,27 +121,30 @@ namespace BankStatementParser.Banks
 
                                 currentTrxn = new Transaction
                                 {
-                                    Date = DateTime.ParseExact(s.Text, "dd/MM/yyyy",
+                                    Date = DateTime.ParseExact(s.Text, "MMM d, yyyy",
                                         CultureInfo.InvariantCulture)
                                 };
-                                state = State.ValueDate;
+                                state = State.TrxnType;
                             }
-                            else if (s.Text == "Continue on next Page"
-                                     || s.Text == "Total / Balance Carried Forward")
+                            else if (s.Text == "© 2021 Revolut Payments UAB")
                             {
                                 nextPage = true;
-                                state = State.ScrollToTable;
                             }
-                            else if (s.Left.IsApproximately(141)
+                            else if (s.Left.IsApproximately(116)
                                      && currentTrxn != null)
                             {
                                 currentTrxn.Description += " " + s.Text;
                             }
+                            else if (s.Text == "Statement" && s.Left.IsApproximately(471))
+                            {
+                                currentBalance = null;
+                                state = State.SearchAccountNumber;
+                            }
 
                             break;
-                        case State.ValueDate:
-                            if (!_dateRegex.IsMatch(s.Text))
-                                throw new Exception($"Date was expected but got {s.Text}.");
+                        case State.TrxnType:
+                            if (!_trxnTypeRegex.IsMatch(s.Text))
+                                throw new Exception($"Transaction type was expected, but got '{s.Text}'.");
                             state = State.FirstDescription;
                             break;
                         case State.FirstDescription:
@@ -147,10 +165,10 @@ namespace BankStatementParser.Banks
                             if (currentTrxn.Amount.HasValue)
                                 throw new Exception("Amount was expected to be null but was not.");
 
-                            var amount = decimal.Parse(s.Text, CultureInfo.InvariantCulture);
-                            if (s.Right.IsApproximately(411))
+                            var amount = decimal.Parse(match.Groups["amount"].Value, CultureInfo.InvariantCulture);
+                            if (s.Right.IsApproximately(453))
                                 currentTrxn.Amount = -amount;
-                            else if (s.Right.IsApproximately(484))
+                            else if (s.Right.IsApproximately(505))
                                 currentTrxn.Amount = +amount;
                             else
                                 throw new Exception($"Found amount at unexpected location: {s.Right}.");
@@ -159,15 +177,17 @@ namespace BankStatementParser.Banks
                             break;
                         case State.Balance:
                             var oldBalance = currentBalance;
-                            if (!decimal.TryParse(s.Text, NumberStyles.Number, CultureInfo.InvariantCulture,
-                                out currentBalance))
-                                throw new Exception($"Account number was expected to be numeric but was {s.Text}.");
+                            var matchBalance = _amountRegex.Match(s.Text);
+                            if (!matchBalance.Success)
+                                throw new Exception($"Balance was expected to be numeric but was {s.Text}.");
+                            currentBalance = decimal.Parse(matchBalance.Groups["amount"].Value, CultureInfo.InvariantCulture);
                             if (currentTrxn == null)
                                 throw new Exception("Current transaction was not expected to be null but was.");
-                            if (oldBalance + currentTrxn.Amount != currentBalance)
+                            if (oldBalance != null && oldBalance != currentBalance)
                                 throw new Exception(
                                     $"Balance was expected to be {oldBalance + currentTrxn.Amount} but was {currentBalance}.");
 
+                            currentBalance -= currentTrxn.Amount;
                             state = State.SearchTrxn;
                             break;
 
@@ -184,14 +204,14 @@ namespace BankStatementParser.Banks
 
             return statement;
         }
-        
+
         enum State
         {
             SearchAccountNumber,
             SearchStatementPeriod,
             ScrollToTable,
             SearchTrxn,
-            ValueDate,
+            TrxnType,
             FirstDescription,
             Amount,
             Balance,
