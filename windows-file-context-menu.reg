@@ -1,0 +1,29 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf]
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell]
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser]
+"MUIVerb"="Parse bank statement"
+"subcommands"=""
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell]
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parseboc]
+@="Bank of Cyprus"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parseboc\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b BoC -p \"%1\""
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parseboc]
+@="Hellenic Bank"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parseboc\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Hellenic -p \"%1\""
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc]
+@="Revolut"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Revolut -p \"%1\""
