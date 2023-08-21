@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,10 +20,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="test-data\*\*.*">
+    <Content Include="test-data\**\*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="test-data\boc\1\1.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
 
   </ItemGroup>
+
+
 
 </Project>

@@ -35,15 +35,19 @@ namespace BankStatementParser
                             .SelectMany(s => s.Transactions).ToArray();
                         var serializedTransactions = transactionSerializer.Serialize(
                             transactions);
-                        var fileName = $"statement_{accountNumber}_gen{DateTime.Now:yyyyMMdd-HHmmss}.csv";
+                        var fileName = File.Exists(o.Path)
+                            ? Path.ChangeExtension(o.Path, ".csv")
+                            : $"statement_{accountNumber}_gen{DateTime.Now:yyyyMMdd-HHmmss}.csv";
 
                         var transactionsWord = transactions.Length != 1 ? "transactions" : "transaction";
-                        Console.WriteLine($"Writing {transactions.Length} {transactionsWord} to {Path.GetFullPath(fileName)}...");
+                        Console.WriteLine(
+                            $"Writing {transactions.Length} {transactionsWord} to {Path.GetFullPath(fileName)}...");
                         File.WriteAllText(fileName, serializedTransactions);
                     }
 
                     Console.WriteLine();
-                    PrintInColor("Done!", ConsoleColor.Green);
+                    PrintInColor("Done! Press <Enter> to exit.", ConsoleColor.Green);
+                    Console.ReadLine();
                 });
         }
 

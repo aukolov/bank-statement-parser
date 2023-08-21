@@ -8,7 +8,7 @@ namespace BankStatementParser
         public string Serialize(Transaction[] transactions)
         {
             var result = new StringBuilder("Date,Description,Amount")
-                .AppendLine();
+                .Append("\r\n");
             foreach (var trxn in transactions)
             {
                 result.Append(trxn.Date?.ToString("dd/MM/yyyy")).Append(",");
@@ -17,7 +17,7 @@ namespace BankStatementParser
                 else
                     result.Append(trxn.Description).Append(",");
                 result.Append(trxn.Amount?.ToString("G29", CultureInfo.InvariantCulture))
-                    .AppendLine();
+                    .Append("\r\n");
             }
 
             return result.ToString();
