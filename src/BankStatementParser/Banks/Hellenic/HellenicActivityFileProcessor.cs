@@ -249,7 +249,7 @@ namespace BankStatementParser.Banks.Hellenic
                                 {
                                     statement.Transactions.Add(currentTrxn);
                                     currentTrxn = null;
-                                    balanceRight = 0;
+                                    currentBalance = 0;
                                     expectedDescriptionLines = 0;
                                 }
                             }
