@@ -13,10 +13,9 @@ namespace BankStatementParser.Banks
     {
         private readonly PdfParser _pdfParser = new PdfParser();
         private readonly Regex _accountNumberRegex = new Regex(@"^\w{2}\d{10,}$");
-        private readonly Regex _dateRegex = new Regex(@"^\w{3} \d{1,2}, \d{4}$");
         private readonly Regex _trxnTypeRegex = new Regex(@"^\w{3}$");
-        private readonly Regex _amountRegex = new Regex(@"^[$€₺£]?[A-Z]{0,3}(?<amount>(\d{1,3})(,\d{3})*\.\d{2}$)");
-            
+        private readonly Regex _amountRegex = new Regex(@"^[$€₺£]?[A-Z]{0,3}(?<amount>(\d{1,3})([, ]\d{3})*\.\d{2}$)");
+
         public Statement[] Process(string path)
         {
             var files = new List<string>();
@@ -48,6 +47,9 @@ namespace BankStatementParser.Banks
                 Transactions = new List<Transaction>()
             };
 
+            var moneyOutRight = 0d;
+            var moneyInRight = 0d;
+
             foreach (var page in pdfModel.Pages)
             {
                 var nextPage = false;
@@ -56,11 +58,12 @@ namespace BankStatementParser.Banks
                 {
                     var s = page.Sentences[i];
 
+                    Console.WriteLine("--> " + s.Text);
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
                         case State.SearchAccountNumber:
-                            if (s.Text == "IBAN (SEPA)"
+                            if ((s.Text == "IBAN (SEPA)" || s.Text == "IBAN")
                                 && s.Left.IsApproximately(406))
                             {
                                 if (!_accountNumberRegex.IsMatch(next.Text))
@@ -81,37 +84,54 @@ namespace BankStatementParser.Banks
                             if (s.Text.StartsWith("Transactions from "))
                             {
                                 var periodMatch = Regex.Match(s.Text,
-                                    @"from (?<from>\w{3} \d{1,2}, \d{4}) to (?<to>\w{3} \d{1,2}, \d{4})");
+                                    @"from (?<from>.+) to (?<to>.+)");
                                 var fromText = periodMatch.Groups["from"].Captures[0].Value;
                                 var toText = periodMatch.Groups["to"].Captures[0].Value;
-                                var from = DateTime.ParseExact(fromText, "MMM d, yyyy",
+                                var from = DateTime.Parse(fromText,
                                     CultureInfo.InvariantCulture);
                                 statement.FromDate = statement.FromDate == DateTime.MinValue
                                     ? from
                                     : from < statement.FromDate
                                         ? from
                                         : statement.FromDate;
-                                var to = DateTime.ParseExact(toText, "MMM d, yyyy", CultureInfo.InvariantCulture);
+                                var to = DateTime.Parse(toText);
                                 statement.ToDate = statement.ToDate == DateTime.MinValue
                                     ? to
                                     : to > statement.ToDate
                                         ? to
                                         : statement.ToDate;
-                                state = State.ScrollToTable;
+                                state = State.SearchMoneyOutColumn;
                             }
 
                             break;
-                        case State.ScrollToTable:
-                            if (s.Text == "Balance"
+                        case State.SearchMoneyOutColumn:
+                            if (s.Text == "Money out")
+                            {
+                                state = State.MoneyInColumn;
+                                moneyOutRight = s.Right;
+                            }
+
+                            break;
+                        case State.MoneyInColumn:
+                            if (s.Text != "Money in")
+                            {
+                                throw new Exception($"Money In column expected, but got '{s.Text}'.");
+                            }
+
+                            moneyInRight = s.Right;
+                            state = State.BalanceColumn;
+                            break;
+                        case State.BalanceColumn:
+                            if (s.Text != "Balance"
                                 && s.Left.IsApproximately(531))
                             {
-                                state = State.SearchTrxn;
+                                throw new Exception($"Balance column expected, but got '{s.Text}'.");
                             }
 
+                            state = State.SearchTrxn;
                             break;
                         case State.SearchTrxn:
-                            var potentialTrxnDate = _dateRegex.Match(s.Text);
-                            if (potentialTrxnDate.Success
+                            if (DateTime.TryParse(s.Text, CultureInfo.InvariantCulture, out _)
                                 && s.Left.IsApproximately(37.5))
                             {
                                 if (currentTrxn != null)
@@ -121,8 +141,8 @@ namespace BankStatementParser.Banks
 
                                 currentTrxn = new Transaction
                                 {
-                                    Date = DateTime.ParseExact(s.Text, "MMM d, yyyy",
-                                        CultureInfo.InvariantCulture)
+                                    Date = DateTime.Parse(s.Text, CultureInfo.InvariantCulture),
+                                    Description = ""
                                 };
                                 state = State.TrxnType;
                             }
@@ -145,13 +165,17 @@ namespace BankStatementParser.Banks
                         case State.TrxnType:
                             if (!_trxnTypeRegex.IsMatch(s.Text))
                                 throw new Exception($"Transaction type was expected, but got '{s.Text}'.");
-                            state = State.FirstDescription;
+
+                            state = next.Right.IsApproximately(moneyOutRight) ||
+                                    next.Right.IsApproximately(moneyInRight)
+                                ? State.Amount
+                                : State.FirstDescription;
                             break;
                         case State.FirstDescription:
                             if (currentTrxn == null)
                                 throw new Exception("Current transaction must not be null.");
-                            if (currentTrxn.Description != null)
-                                throw new Exception("Description was expected to be null but was not.");
+                            if (currentTrxn.Description.Length > 0)
+                                throw new Exception("Description was expected to be empty but was not.");
 
                             currentTrxn.Description = s.Text;
                             state = State.Amount;
@@ -165,10 +189,11 @@ namespace BankStatementParser.Banks
                             if (currentTrxn.Amount.HasValue)
                                 throw new Exception("Amount was expected to be null but was not.");
 
-                            var amount = decimal.Parse(match.Groups["amount"].Value, CultureInfo.InvariantCulture);
-                            if (s.Right.IsApproximately(453))
+                            var amount = decimal.Parse(match.Groups["amount"].Value.Replace(" ", ""),
+                                CultureInfo.InvariantCulture);
+                            if (s.Right.IsApproximately(moneyOutRight))
                                 currentTrxn.Amount = -amount;
-                            else if (s.Right.IsApproximately(505))
+                            else if (s.Right.IsApproximately(moneyInRight))
                                 currentTrxn.Amount = +amount;
                             else
                                 throw new Exception($"Found amount at unexpected location: {s.Right}.");
@@ -180,7 +205,8 @@ namespace BankStatementParser.Banks
                             var matchBalance = _amountRegex.Match(s.Text);
                             if (!matchBalance.Success)
                                 throw new Exception($"Balance was expected to be numeric but was {s.Text}.");
-                            currentBalance = decimal.Parse(matchBalance.Groups["amount"].Value, CultureInfo.InvariantCulture);
+                            currentBalance = decimal.Parse(matchBalance.Groups["amount"].Value.Replace(" ", ""),
+                                CultureInfo.InvariantCulture);
                             if (currentTrxn == null)
                                 throw new Exception("Current transaction was not expected to be null but was.");
                             if (oldBalance != null && oldBalance != currentBalance)
@@ -209,7 +235,9 @@ namespace BankStatementParser.Banks
         {
             SearchAccountNumber,
             SearchStatementPeriod,
-            ScrollToTable,
+            SearchMoneyOutColumn,
+            MoneyInColumn,
+            BalanceColumn,
             SearchTrxn,
             TrxnType,
             FirstDescription,
