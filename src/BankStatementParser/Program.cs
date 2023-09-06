@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using BankStatementParser.Banks;
+using BankStatementParser.Banks.Hellenic;
 using CommandLine;
 
 namespace BankStatementParser

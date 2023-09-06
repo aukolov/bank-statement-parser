@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using BankStatementParser.Banks;
+using BankStatementParser.Banks.Hellenic;
 using NUnit.Framework;
 using Shouldly;
 
@@ -44,8 +45,8 @@ namespace BankStatementParser.Tests
             var statement = _fileProcessor.Process("test-data/hellenic/1.pdf")
                 .ShouldHaveSingleItem();
 
-            statement.FromDate.ShouldBe(new DateTime(2020, 3, 1));
-            statement.ToDate.ShouldBe(new DateTime(2020, 5, 31));
+            statement.FromDate.ShouldBe(new DateTime(2022, 9, 4));
+            statement.ToDate.ShouldBe(new DateTime(2022, 10, 1));
         }
 
         [Test]

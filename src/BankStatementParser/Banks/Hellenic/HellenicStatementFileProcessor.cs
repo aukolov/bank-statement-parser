@@ -7,9 +7,9 @@ using System.Text.RegularExpressions;
 using BankStatementParser.Extensions;
 using Pdf2Text;
 
-namespace BankStatementParser.Banks
+namespace BankStatementParser.Banks.Hellenic
 {
-    public class HellenicFileProcessor : IFileProcessor
+    public class HellenicStatementFileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
         private readonly Regex _accountNumberRegex = new Regex(@"^\d+-\d+-\d+-\d+$");
@@ -17,33 +17,14 @@ namespace BankStatementParser.Banks
         private readonly Regex _amountRegex = new Regex(@"^(\d{1,3})(\.\d{3})*\,\d{2}$");
         private readonly CultureInfo _numberCultureInfo;
 
-        public HellenicFileProcessor()
+        public HellenicStatementFileProcessor()
         {
             _numberCultureInfo = (CultureInfo) CultureInfo.InvariantCulture.Clone();
             _numberCultureInfo.NumberFormat.NumberDecimalSeparator = ",";
             _numberCultureInfo.NumberFormat.NumberGroupSeparator = ".";
         }
 
-        public Statement[] Process(string path)
-        {
-            var files = new List<string>();
-            if (Directory.Exists(path))
-            {
-                files.AddRange(
-                    Directory.GetFiles(path, "*.pdf", SearchOption.AllDirectories));
-                if (!files.Any())
-                    throw new Exception("No PDF files found.");
-            }
-            else if (File.Exists(path))
-            {
-                files.Add(path);
-            }
-
-            var statements = files.Select(ProcessFile).ToArray();
-            return statements;
-        }
-
-        private Statement ProcessFile(string pdfPath)
+        public Statement ProcessFile(string pdfPath)
         {
             var pdfModel = _pdfParser.Parse(pdfPath);
 
@@ -99,7 +80,7 @@ namespace BankStatementParser.Banks
                                 if (!decimal.TryParse(next.Text, NumberStyles.Number, _numberCultureInfo,
                                     out currentBalance))
                                     throw new Exception(
-                                        $"Account number was expected to be numeric but was {next.Text}.");
+                                        $"Account balance was expected to be numeric but was {next.Text}.");
 
                                 state = State.ScrollToTable;
                             }
