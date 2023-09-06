@@ -32,18 +32,21 @@ namespace BankStatementParser
                             PrintInColor(error, ConsoleColor.Red);
                         }
 
-                        var transactions = accountStatements
-                            .SelectMany(s => s.Transactions).ToArray();
-                        var serializedTransactions = transactionSerializer.Serialize(
-                            transactions);
-                        var fileName = File.Exists(o.Path)
-                            ? Path.ChangeExtension(o.Path, ".csv")
-                            : $"statement_{accountNumber}_gen{DateTime.Now:yyyyMMdd-HHmmss}.csv";
+                        foreach (var grouping in accountStatements.GroupBy(x => x.AccountNumber))
+                        {
+                            var transactions = grouping
+                                .SelectMany(s => s.Transactions).ToArray();
+                            var serializedTransactions = transactionSerializer.Serialize(
+                                transactions);
+                            var fileName = File.Exists(o.Path)
+                                ? $"{Path.GetFileNameWithoutExtension(o.Path)}_{grouping.Key}.csv"
+                                : $"statement_{accountNumber}_gen{DateTime.Now:yyyyMMdd-HHmmss}.csv";
 
-                        var transactionsWord = transactions.Length != 1 ? "transactions" : "transaction";
-                        Console.WriteLine(
-                            $"Writing {transactions.Length} {transactionsWord} to {Path.GetFullPath(fileName)}...");
-                        File.WriteAllText(fileName, serializedTransactions);
+                            var transactionsWord = transactions.Length != 1 ? "transactions" : "transaction";
+                            Console.WriteLine(
+                                $"Writing {transactions.Length} {transactionsWord} to {Path.GetFullPath(fileName)}...");
+                            File.WriteAllText(fileName, serializedTransactions);
+                        }
                     }
 
                     Console.WriteLine();

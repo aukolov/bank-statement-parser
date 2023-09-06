@@ -31,21 +31,19 @@ namespace BankStatementParser.Banks
                 files.Add(path);
             }
 
-            var statements = files.Select(ProcessFile).ToArray();
+            var statements = files.SelectMany(ProcessFile).ToArray();
             return statements;
         }
 
-        private Statement ProcessFile(string pdfPath)
+        private Statement[] ProcessFile(string pdfPath)
         {
             var pdfModel = _pdfParser.Parse(pdfPath);
 
-            var state = State.SearchAccountNumber;
+            var state = State.SearchAccountName;
             Transaction currentTrxn = null;
             decimal? currentBalance = null;
-            var statement = new Statement
-            {
-                Transactions = new List<Transaction>()
-            };
+            var statements = new List<Statement>();
+            Statement statement = null;
 
             var moneyOutRight = 0d;
             var moneyInRight = 0d;
@@ -53,29 +51,52 @@ namespace BankStatementParser.Banks
             foreach (var page in pdfModel.Pages)
             {
                 var nextPage = false;
+                if (page.Sentences.Count > 0 && page.Sentences[0].Text is "Monthly statement" or "Statement")
+                {
+                    if (currentTrxn != null && statement != null)
+                    {
+                        statement.Transactions.Add(currentTrxn);
+                    }
+                    statement = new Statement
+                    {
+                        Transactions = new List<Transaction>()
+                    };
+                    currentTrxn = null;
+                    currentBalance = null;
+                    moneyOutRight = 0;
+                    moneyInRight = 0;
+                    state = State.SearchAccountName;
+                }
 
                 for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
                 {
                     var s = page.Sentences[i];
 
-                    Console.WriteLine("--> " + s.Text);
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
+                        case State.SearchAccountName:
+                            if (s.Text == "Account name")
+                            {
+                                statement.AccountNumber = next.Text.Replace(" ", "_");
+                                statements.Add(statement);
+                                state = State.SearchAccountNumber;
+                            }
+                            else if (s.Text.StartsWith("Transactions from"))
+                            {
+                                nextPage = true;
+                            }
+
+                            break;
                         case State.SearchAccountNumber:
                             if ((s.Text == "IBAN (SEPA)" || s.Text == "IBAN")
                                 && s.Left.IsApproximately(406))
                             {
                                 if (!_accountNumberRegex.IsMatch(next.Text))
                                     throw new Exception(
-                                        $"Account number was expected to be numeric but was {next.Text}.");
-                                if (statement.AccountNumber != null && statement.AccountNumber != next.Text)
-                                {
-                                    throw new Exception(
-                                        $"More than one account in one statement file: '{statement.AccountNumber}' and '{next.Text}'");
-                                }
+                                        $"Account number has unexpected format: {next.Text}.");
 
-                                statement.AccountNumber = next.Text;
+                                statement.AccountNumber += "-" + next.Text;
                                 state = State.SearchStatementPeriod;
                             }
 
@@ -155,11 +176,6 @@ namespace BankStatementParser.Banks
                             {
                                 currentTrxn.Description += " " + s.Text;
                             }
-                            else if (s.Text == "Statement" && s.Left.IsApproximately(471))
-                            {
-                                currentBalance = null;
-                                state = State.SearchAccountNumber;
-                            }
 
                             break;
                         case State.TrxnType:
@@ -228,11 +244,12 @@ namespace BankStatementParser.Banks
                 statement.Transactions.Add(currentTrxn);
             }
 
-            return statement;
+            return statements.ToArray();
         }
 
         enum State
         {
+            SearchAccountName,
             SearchAccountNumber,
             SearchStatementPeriod,
             SearchMoneyOutColumn,

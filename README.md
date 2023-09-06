@@ -12,5 +12,5 @@ Command line tool for extracting transactions from Bank of Cyprus, Hellenic Bank
 ## Development
 Build release for Windows:
 ```
-dotnet publish -c Release -p:PublishSingleFile=true --self-contained false -r win-x64
+dotnet publish -c Release -p:PublishSingleFile=true -p:UseAppHost=true --self-contained false -r win-x64
 ```
