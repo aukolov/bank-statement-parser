@@ -12,7 +12,7 @@ namespace BankStatementParser.Banks
     public class UnlimintFileProcessor : IFileProcessor
     {
         private readonly PdfParser _pdfParser = new PdfParser();
-        private readonly Regex _accountNumberRegex = new Regex(@"^\w{2}\d{10,}$");
+        private readonly Regex _accountNumberRegex = new Regex(@"^\w{2}\d\{2}( \d{4}){6}$");
         private readonly Regex _trxnTypeRegex = new Regex(@"^\w{3}$");
         private readonly Regex _amountRegex = new Regex(@"^(?<amount>(\d{1,3})([, ]\d{3})*\.\d{2}$)");
 
@@ -54,7 +54,7 @@ namespace BankStatementParser.Banks
             foreach (var page in pdfModel.Pages)
             {
                 var nextPage = false;
-                if (page.Sentences.Count > 0 && page.Sentences[0].Text is "Monthly statement" or "Statement")
+                if (page.Sentences.Count > 0 && page.Sentences[0].Text == "Customer Account")
                 {
                     if (currentTrxn != null && statement != null)
                     {
@@ -74,12 +74,13 @@ namespace BankStatementParser.Banks
                 for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
                 {
                     var s = page.Sentences[i];
+                    Console.WriteLine(Math.Round(s.Top).ToString().PadLeft(10, ' ' ) + s.Text + " " + s.Left);
 
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
                         case State.SearchAccountNumber:
-                            if ((s.Text == "IBAN (SEPA)" || s.Text == "IBAN")
+                            if ((s.Text == "Customer Account")
                                 && s.Left.IsApproximately(406))
                             {
                                 if (!_accountNumberRegex.IsMatch(next.Text))
@@ -95,7 +96,7 @@ namespace BankStatementParser.Banks
                             if (s.Text.StartsWith("Period"))
                             {
                                 var periodMatch = Regex.Match(s.Text,
-                                    @"from (?<from>.+) - (?<to>.+)");
+                                    @"(?<from>.+) - (?<to>.+)");
                                 var fromText = periodMatch.Groups["from"].Captures[0].Value;
                                 var toText = periodMatch.Groups["to"].Captures[0].Value;
                                 var from = DateTime.ParseExact(fromText, "dd.MM.yyyy", CultureInfo.InvariantCulture);

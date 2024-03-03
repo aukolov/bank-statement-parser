@@ -4,6 +4,7 @@ namespace BankStatementParser.Banks
     {
         BoC,
         Revolut,
-        Hellenic
+        Hellenic,
+        Unlimint,
     }
 }

@@ -65,6 +65,8 @@ namespace BankStatementParser
                     return new RevolutFileProcessor();
                 case Bank.Hellenic:
                     return new HellenicFileProcessor();
+                case Bank.Unlimint:
+                    return new UnlimintFileProcessor();
                 default:
                     throw new ArgumentOutOfRangeException(nameof(bank), bank, null);
             }
