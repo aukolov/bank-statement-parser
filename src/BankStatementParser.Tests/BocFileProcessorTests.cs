@@ -46,7 +46,7 @@ namespace BankStatementParser.Tests
             var expectedResult = File.ReadAllText(csvFile);
 
             var statements = _bocFileProcessor.Process("test-data/boc");
-            statements.Length.ShouldBe(3);
+            statements.Length.ShouldBe(5);
             var actualResult = _transactionSerializer.Serialize(
                 statements.SelectMany(x => x.Transactions).ToArray());
 
