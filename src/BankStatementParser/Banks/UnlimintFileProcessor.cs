@@ -74,8 +74,6 @@ namespace BankStatementParser.Banks
                 for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
                 {
                     var s = page.Sentences[i];
-                    Console.WriteLine(Math.Round(s.Top).ToString().PadLeft(10, ' ' ) + s.Text + " " + s.Left);
-
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {

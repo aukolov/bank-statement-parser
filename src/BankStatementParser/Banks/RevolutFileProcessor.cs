@@ -73,7 +73,6 @@ namespace BankStatementParser.Banks
                 for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
                 {
                     var s = page.Sentences[i];
-                    Console.WriteLine($@"{s.Text} - {Math.Round(s.Top)}");
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
