@@ -45,6 +45,7 @@ namespace BankStatementParser.Banks
             var statements = new List<Statement>();
             Statement statement = null;
 
+            var dateLeft = 0d;
             var moneyOutRight = 0d;
             var moneyInRight = 0d;
 
@@ -57,6 +58,7 @@ namespace BankStatementParser.Banks
                     {
                         statement.Transactions.Add(currentTrxn);
                     }
+
                     statement = new Statement
                     {
                         Transactions = new List<Transaction>()
@@ -71,7 +73,7 @@ namespace BankStatementParser.Banks
                 for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
                 {
                     var s = page.Sentences[i];
-
+                    Console.WriteLine($@"{s.Text} - {Math.Round(s.Top)}");
                     var next = page.Sentences[i + 1];
                     switch (state)
                     {
@@ -89,8 +91,7 @@ namespace BankStatementParser.Banks
 
                             break;
                         case State.SearchAccountNumber:
-                            if ((s.Text == "IBAN (SEPA)" || s.Text == "IBAN")
-                                && s.Left.IsApproximately(406))
+                            if (s.Text == "IBAN (SEPA)" || s.Text == "IBAN")
                             {
                                 if (!_accountNumberRegex.IsMatch(next.Text))
                                     throw new Exception(
@@ -102,30 +103,21 @@ namespace BankStatementParser.Banks
 
                             break;
                         case State.SearchStatementPeriod:
-                            if (s.Text.StartsWith("Transactions from "))
+                            if (s.Text.StartsWith("Transactions"))
                             {
-                                var periodMatch = Regex.Match(s.Text,
-                                    @"from (?<from>.+) to (?<to>.+)");
-                                var fromText = periodMatch.Groups["from"].Captures[0].Value;
-                                var toText = periodMatch.Groups["to"].Captures[0].Value;
-                                var from = DateTime.Parse(fromText,
-                                    CultureInfo.InvariantCulture);
-                                statement.FromDate = statement.FromDate == DateTime.MinValue
-                                    ? from
-                                    : from < statement.FromDate
-                                        ? from
-                                        : statement.FromDate;
-                                var to = DateTime.Parse(toText);
-                                statement.ToDate = statement.ToDate == DateTime.MinValue
-                                    ? to
-                                    : to > statement.ToDate
-                                        ? to
-                                        : statement.ToDate;
-                                state = State.SearchMoneyOutColumn;
+                                state = State.SearchDateColumn;
                             }
 
                             break;
-                        case State.SearchMoneyOutColumn:
+                        case State.SearchDateColumn:
+                            if (s.Text.StartsWith("Date") && s.Left < 60)
+                            {
+                                state = State.MoneyOutColumn;
+                                dateLeft = s.Left;
+                            }
+
+                            break;
+                        case State.MoneyOutColumn:
                             if (s.Text == "Money out")
                             {
                                 state = State.MoneyInColumn;
@@ -144,7 +136,7 @@ namespace BankStatementParser.Banks
                             break;
                         case State.BalanceColumn:
                             if (s.Text != "Balance"
-                                && s.Left.IsApproximately(531))
+                                && s.Left> 500)
                             {
                                 throw new Exception($"Balance column expected, but got '{s.Text}'.");
                             }
@@ -153,7 +145,7 @@ namespace BankStatementParser.Banks
                             break;
                         case State.SearchTrxn:
                             if (DateTime.TryParse(s.Text, CultureInfo.InvariantCulture, out _)
-                                && s.Left.IsApproximately(37.5))
+                                && s.Left.IsApproximately(dateLeft))
                             {
                                 if (currentTrxn != null)
                                 {
@@ -197,6 +189,7 @@ namespace BankStatementParser.Banks
                             state = State.Amount;
                             break;
                         case State.Amount:
+                            if (s.Text.Length == 0) continue;
                             var match = _amountRegex.Match(s.Text);
                             if (!match.Success)
                                 throw new Exception($"Amount was expected but got {s.Text}.");
@@ -252,7 +245,8 @@ namespace BankStatementParser.Banks
             SearchAccountName,
             SearchAccountNumber,
             SearchStatementPeriod,
-            SearchMoneyOutColumn,
+            SearchDateColumn,
+            MoneyOutColumn,
             MoneyInColumn,
             BalanceColumn,
             SearchTrxn,

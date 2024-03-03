@@ -40,20 +40,6 @@ namespace BankStatementParser.Tests
         }
         
         [Test]
-        public void ExtractsFromAndToTimestamp()
-        {
-            var statements = _fileProcessor.Process("test-data/revolut/1.pdf");
-
-            statements.Length.ShouldBe(3);
-            statements[0].FromDate.ShouldBe(new DateTime(2021, 9, 1));
-            statements[0].ToDate.ShouldBe(new DateTime(2021, 9, 30));
-            statements[1].FromDate.ShouldBe(new DateTime(2021, 10, 1));
-            statements[1].ToDate.ShouldBe(new DateTime(2021, 10, 31));
-            statements[2].FromDate.ShouldBe(new DateTime(2021, 11, 1));
-            statements[2].ToDate.ShouldBe(new DateTime(2021, 11, 30));
-        }
-
-        [Test]
         public void ExtractsAccountNumber()
         {
             var statements = _fileProcessor.Process("test-data/revolut/1.pdf");
