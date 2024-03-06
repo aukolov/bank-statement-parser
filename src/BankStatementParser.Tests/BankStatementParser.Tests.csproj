@@ -23,6 +23,7 @@
     <Content Include="test-data\**\*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+
   </ItemGroup>
 
 
