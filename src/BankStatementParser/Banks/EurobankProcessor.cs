@@ -66,11 +66,9 @@ public class EurobankProcessor
                 currentBalance = null;
             }
 
-            Console.WriteLine($@" ======== Page {page.PageNumber} ======== ");
             for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
             {
                 var s = page.Sentences[i];
-                Console.WriteLine($@"{s.Text} - {Math.Round(s.Left)} - {Math.Round(s.Right)}");
                 var next = page.Sentences[i + 1];
                 switch (state)
                 {
