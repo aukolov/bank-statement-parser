@@ -16,6 +16,12 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parseboc\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b BoC -p \"%1\""
 
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc]
+@="Eurobank"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Eurobank -p \"%1\""
+
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parseboc]
 @="Hellenic Bank"
 

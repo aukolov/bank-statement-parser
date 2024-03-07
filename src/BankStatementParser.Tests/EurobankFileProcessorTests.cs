@@ -9,13 +9,13 @@ namespace BankStatementParser.Tests
 {
     public class EurobankFileProcessorTests
     {
-        private EurobankProcessor _fileProcessor;
+        private EurobankFileProcessor _fileProcessor;
         private TransactionSerializer _transactionSerializer;
 
         [SetUp]
         public void Setup()
         {
-            _fileProcessor = new EurobankProcessor();
+            _fileProcessor = new EurobankFileProcessor();
             _transactionSerializer = new TransactionSerializer();
         }
 
@@ -49,6 +49,16 @@ namespace BankStatementParser.Tests
             statement.AccountNumber.ShouldStartWith("CY860");
             statement.AccountNumber.ShouldEndWith("36");
             statement.AccountNumber.Length.ShouldBe(28);
+        }
+        
+        [Test]
+        public void ExtractsFromAndToTimestamp()
+        {
+            var statement = _fileProcessor.Process("test-data/eurobank/1.pdf")
+                .ShouldHaveSingleItem();
+
+            statement.FromDate.ShouldBe(new DateTime(2024, 02, 1));
+            statement.ToDate.ShouldBe(new DateTime(2024, 02, 29));
         }
     }
 }

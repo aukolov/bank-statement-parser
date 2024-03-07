@@ -61,6 +61,8 @@ namespace BankStatementParser
             {
                 case Bank.BoC:
                     return new BocFileProcessor();
+                case Bank.Eurobank:
+                    return new EurobankFileProcessor();
                 case Bank.Revolut:
                     return new RevolutFileProcessor();
                 case Bank.Hellenic:

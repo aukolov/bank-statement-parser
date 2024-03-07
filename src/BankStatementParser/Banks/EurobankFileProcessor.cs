@@ -9,11 +9,10 @@ using Pdf2Text;
 
 namespace BankStatementParser.Banks;
 
-public class EurobankProcessor
+public class EurobankFileProcessor : IFileProcessor
 {
     private readonly PdfParser _pdfParser = new PdfParser();
     private readonly Regex _accountNumberRegex = new Regex(@"^\w{2}\d{10,}$");
-    private readonly Regex _trxnTypeRegex = new Regex(@"^\w{3}$");
     private readonly Regex _amountRegex = new Regex(@"^[$€₺£]?[A-Z]{0,3}(?<amount>(\d{1,3})([, ]\d{3})*\.\d{2}$)");
 
     public Statement[] Process(string path)
