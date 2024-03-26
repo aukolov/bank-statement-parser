@@ -182,9 +182,9 @@ namespace BankStatementParser.Banks.Hellenic
                                 {
                                     if (s.Left.IsApproximately(descriptionLeft))
                                     {
-                                        if (lastDateBottom.IsApproximately(0))
+                                        if (lastDateBottom.IsApproximately(0) || lastDateBottom - 3 > s.Bottom)
                                             expectedDescriptionLines++;
-                                        else if (!lastDateBottom.IsApproximately(s.Bottom, 4.9))
+                                        else if (!lastDateBottom.IsApproximately(s.Bottom, 4.9) || lastDateBottom + 3 < s.Bottom)
                                             expectedDescriptionLines--;
                                     }
 
@@ -192,7 +192,7 @@ namespace BankStatementParser.Banks.Hellenic
                                         currentTrxn.Description += (currentTrxn.Description.Length == 0 ? "" : " ") +
                                                                    trimmedText;
                                     if (expectedDescriptionLines == 0 && !lastDateBottom.IsApproximately(s.Bottom, 4.9) &&
-                                        (next == null || next.Top > s.Bottom))
+                                        (next == null || next.Top > s.Bottom) && currentTrxn.Amount != null)
                                     {
                                         statement.Transactions.Add(currentTrxn);
                                         currentTrxn = null;
