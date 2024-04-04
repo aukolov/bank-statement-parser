@@ -21,7 +21,9 @@ namespace BankStatementParser.Tests
 
         private static string[] GetPdfFiles() =>
             Directory.GetFiles("./test-data/boc", "*.pdf")
-                .Concat(Directory.GetFiles("./test-data/boc/1", "*.pdf")).ToArray();
+                .Concat(Directory.GetFiles("./test-data/boc/1", "*.pdf"))
+                .Concat(Directory.GetFiles("./test-data/boc/2", "*.pdf"))
+                .ToArray();
 
         [TestCaseSource(nameof(GetPdfFiles))]
         public void ProcessesFiles(string pdfPath)
