@@ -68,7 +68,6 @@ public partial class Eurobank2FileProcessor : IFileProcessor
             for (var i = 0; i < page.Sentences.Count - 1 && !nextPage; i++)
             {
                 var s = page.Sentences[i];
-                Console.WriteLine($"{s.Text} - {s.Left} - {s.Right}");
                 var next = page.Sentences[i + 1];
                 switch (state)
                 {
