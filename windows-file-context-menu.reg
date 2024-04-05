@@ -23,13 +23,19 @@ Windows Registry Editor Version 5.00
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Eurobank -p \"%1\""
 
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc]
-@="Hellenic Bank"
+@="Eurobank2"
 
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc\command]
-@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Hellenic -p \"%1\""
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Eurobank2 -p \"%1\""
 
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\d_parseboc]
-@="Revolut"
+@="Hellenic Bank"
 
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\d_parseboc\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Hellenic -p \"%1\""
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\e_parseboc]
+@="Revolut"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\e_parseboc\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Revolut -p \"%1\""
