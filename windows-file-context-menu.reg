@@ -10,32 +10,38 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell]
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parseboc]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parse]
 @="Bank of Cyprus"
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parseboc\command]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\a_parse\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b BoC -p \"%1\""
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parseboc]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parse]
 @="Eurobank"
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parseboc\command]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\b_parse\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Eurobank -p \"%1\""
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parse]
 @="Eurobank2"
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parseboc\command]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\c_parse\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Eurobank2 -p \"%1\""
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\d_parseboc]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\d_parse]
+@="Eurobank3"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\d_parse\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Eurobank3 -p \"%1\""
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\e_parse]
 @="Hellenic Bank"
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\d_parseboc\command]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\e_parse\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Hellenic -p \"%1\""
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\e_parseboc]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\f_parse]
 @="Revolut"
 
-[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\e_parseboc\command]
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\f_parse\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Revolut -p \"%1\""

@@ -5,6 +5,7 @@ namespace BankStatementParser.Banks
         BoC,
         Eurobank,
         Eurobank2,
+        Eurobank3,
         Revolut,
         Hellenic,
         Unlimint,

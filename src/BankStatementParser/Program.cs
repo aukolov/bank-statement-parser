@@ -65,6 +65,8 @@ namespace BankStatementParser
                     return new EurobankFileProcessor();
                 case Bank.Eurobank2:
                     return new Eurobank2FileProcessor();
+                case Bank.Eurobank3:
+                    return new Eurobank3FileProcessor();
                 case Bank.Revolut:
                     return new RevolutFileProcessor();
                 case Bank.Hellenic:
