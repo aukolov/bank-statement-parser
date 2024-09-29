@@ -14,7 +14,7 @@ namespace BankStatementParser.Banks
         private readonly PdfParser _pdfParser = new PdfParser();
         private readonly Regex _accountNumberRegex = new Regex(@"^\w{2}\d{10,}$");
         private readonly Regex _trxnTypeRegex = new Regex(@"^\w{3}$");
-        private readonly Regex _amountRegex = new Regex(@"^[$€₺£]?[A-Z]{0,3}(?<amount>(\d{1,3})([, ]\d{3})*\.\d{2}$)");
+        private readonly Regex _amountRegex = new Regex(@"^-?[$€₺£]?[A-Z]{0,3}(?<amount>(\d{1,3})([, ]\d{3})*\.\d{2}$)");
 
         public Statement[] Process(string path)
         {
@@ -92,11 +92,12 @@ namespace BankStatementParser.Banks
                         case State.SearchAccountNumber:
                             if (s.Text == "IBAN (SEPA)" || s.Text == "IBAN")
                             {
-                                if (!_accountNumberRegex.IsMatch(next.Text))
+                                var accountNumber = next.Text.Replace(" ", "");
+                                if (!_accountNumberRegex.IsMatch(accountNumber))
                                     throw new Exception(
-                                        $"Account number has unexpected format: {next.Text}.");
+                                        $"Account number has unexpected format: {accountNumber}.");
 
-                                statement.AccountNumber += "-" + next.Text;
+                                statement.AccountNumber += "-" + accountNumber;
                                 state = State.SearchStatementPeriod;
                             }
 
@@ -213,7 +214,8 @@ namespace BankStatementParser.Banks
                             var matchBalance = _amountRegex.Match(s.Text);
                             if (!matchBalance.Success)
                                 throw new Exception($"Balance was expected to be numeric but was {s.Text}.");
-                            currentBalance = decimal.Parse(matchBalance.Groups["amount"].Value.Replace(" ", ""),
+                            currentBalance = (s.Text.StartsWith("-") ? -1 : 1) 
+                                             * decimal.Parse(matchBalance.Groups["amount"].Value.Replace(" ", ""),
                                 CultureInfo.InvariantCulture);
                             if (currentTrxn == null)
                                 throw new Exception("Current transaction was not expected to be null but was.");
