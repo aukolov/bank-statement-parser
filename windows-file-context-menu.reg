@@ -45,3 +45,9 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\f_parse\command]
 @="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Revolut -p \"%1\""
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\g_parse]
+@="Fibank"
+
+[HKEY_CLASSES_ROOT\SystemFileAssociations\.pdf\shell\bankstatementparser\shell\g_parse\command]
+@="C:\\tools\\bank-statement-parser\\BankStatementParser.exe -b Fibank -p \"%1\""

@@ -9,5 +9,6 @@ namespace BankStatementParser.Banks
         Revolut,
         Hellenic,
         Unlimint,
+        Fibank
     }
 }

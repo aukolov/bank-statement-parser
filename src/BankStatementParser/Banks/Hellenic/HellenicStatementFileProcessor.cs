@@ -48,8 +48,7 @@ namespace BankStatementParser.Banks.Hellenic
                     switch (state)
                     {
                         case State.SearchAccountNumber:
-                            if (s.Text == "ACCOUNT NO"
-                                && s.Left.IsApproximately(272))
+                            if (s.Text == "ACCOUNT NO" && s.Left > 250)
                             {
                                 if (!_accountNumberRegex.IsMatch(next.Text))
                                     throw new Exception(

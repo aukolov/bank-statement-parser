@@ -73,6 +73,8 @@ namespace BankStatementParser
                     return new HellenicFileProcessor();
                 case Bank.Unlimint:
                     return new UnlimintFileProcessor();
+                case Bank.Fibank:
+                    return new FibankFileProcessor();
                 default:
                     throw new ArgumentOutOfRangeException(nameof(bank), bank, null);
             }
